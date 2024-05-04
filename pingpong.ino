@@ -2,13 +2,13 @@
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
-#define PIN 6
+#define PIN 5
 #define BTN_LEFT_PIN 3
 #define BTN_RIGHT_PIN 4
 #define MAX_PLATFORM_VELOCITY 1
-int SideNum = 8;
+int SideNum = 16;
 int NUMPIXELS = SideNum * SideNum;
-int lenPlatform = 3;
+int lenPlatform = 5;
 float xOfPlatform = (SideNum - lenPlatform) / 2;
 float platformVelocity = 0.0;
 bool isGameOver = false;
@@ -18,12 +18,11 @@ float BallY = SideNum / 2;
 float BallXVelocity = 0.5;
 float BallYVelocity = 0.5;
 
-int fps = 7;
+int fps = 10;
 
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-#define DELAYVAL 200 // Time (in milliseconds) to pause between pixels
 
 void setup() {
   pinMode(BTN_LEFT_PIN, INPUT_PULLUP);
@@ -60,13 +59,13 @@ void drawBall() {
     BallYVelocity = -BallYVelocity;
     newY = BallY + BallYVelocity;
   }
-  if (int(newY) == 0 && int(xOfPlatform) < int(newX) && int(newX) < int(xOfPlatform + lenPlatform)) {
+  if (int(newY) == 0 && (int(xOfPlatform) + int(lenPlatform) >= int(newX) && int(xOfPlatform) <= int(newX))) {
     BallXVelocity = -BallXVelocity;
     newX = BallX + BallXVelocity;
     BallYVelocity = -BallYVelocity;
     newY = BallY + BallYVelocity;
   }
-  if (newY < 0) {
+  if (newY < 0 && !(int(xOfPlatform) + int(lenPlatform) >= int(newX) && int(xOfPlatform) <= int(newX))) {
     isGameOver = true;
   }
   BallX = newX;
@@ -84,16 +83,10 @@ void controllers() {
   } else {
     platformVelocity = 0;
   }
-  xOfPlatform += platformVelocity;
-}
-
-void autoPlatform() {
-  xOfPlatform += 0.1;
-  if (xOfPlatform > 8 - 3) {
-    xOfPlatform = 0;
+  if ((int(xOfPlatform) + int(lenPlatform) < SideNum && platformVelocity > 0) || (platformVelocity < 0 && int(xOfPlatform) > 0)) {
+    xOfPlatform += platformVelocity;
   }
 }
-
 
 void loop() {
   pixels.clear();
@@ -104,7 +97,6 @@ void loop() {
       }
     }
     pixels.show();
-    delay(3000);
     isGameOver = false;
     BallX = SideNum / 2;
     BallY = SideNum / 2;
@@ -114,7 +106,7 @@ void loop() {
   else {
     controllers();
     drawPlatform();
-    autoPlatform();
+    //autoPlatform();
     drawBall();
     pixels.show();
     int sleeptime = 1000 / fps;
