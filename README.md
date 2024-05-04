@@ -1,1 +1,1 @@
-# Ping pong на ардуино
+# Ping pong на Arduino
